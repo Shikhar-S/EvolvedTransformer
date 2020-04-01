@@ -1,6 +1,6 @@
 import torchtext
 from torchtext.datasets import text_classification
-from models import ClassificationTransformer
+from classification_transformer import ClassificationTransformer
 from torch.utils.data import DataLoader
 import torch
 from tqdm import tqdm
@@ -18,7 +18,8 @@ VOCAB_SIZE = len(train_dataset.get_vocab())
 EMBED_DIM = 32
 MAX_SEQ_LEN=200
 NUM_CLASS = len(train_dataset.get_labels())
-model = ClassificationTransformer(EMBED_DIM,VOCAB_SIZE,NUM_CLASS,max_seq_len=MAX_SEQ_LEN).to(device)
+model = ClassificationTransformer(EMBED_DIM,VOCAB_SIZE,NUM_CLASS,max_seq_len=MAX_SEQ_LEN)
+model.to(device)
 
 import torch.nn.functional as F
 def generate_batch(batch):
@@ -33,15 +34,16 @@ def train_func(sub_train_):
     train_loss = 0
     train_acc = 0
     data = DataLoader(sub_train_, batch_size=BATCH_SIZE, shuffle=True,collate_fn=generate_batch)
-    for i, (text, cls) in enumerate(tqdm(data)):
+    for i, (text, category) in enumerate(tqdm(data)):
         optimizer.zero_grad()
-        text, cls = text.to(device), cls.to(device)
+        text, category = text.to(device), category.to(device)
         output = model(text)
-        loss = criterion(output, cls)
+        loss = criterion(output, category)
         train_loss += loss.item()
+        print(loss.item())
         loss.backward()
         optimizer.step()
-        train_acc += (output.argmax(1) == cls).sum().item()
+        train_acc += (output.argmax(1) == category).sum().item()
 
     # Adjust the learning rate
     scheduler.step()
@@ -52,13 +54,13 @@ def test(data_):
     loss = 0
     acc = 0
     data = DataLoader(data_, batch_size=BATCH_SIZE, collate_fn=generate_batch)
-    for text, cls in tqdm(data):
-        text, cls = text.to(device), cls.to(device)
+    for text, category in tqdm(data):
+        text, category = text.to(device), category.to(device)
         with torch.no_grad():
             output = model(text)
-            loss = criterion(output, cls)
+            loss = criterion(output, category)
             loss += loss.item()
-            acc += (output.argmax(1) == cls).sum().item()
+            acc += (output.argmax(1) == category).sum().item()
 
     return loss / len(data_), acc / len(data_)
 
@@ -68,7 +70,7 @@ N_EPOCHS = 5
 min_valid_loss = float('inf')
 
 criterion = torch.nn.CrossEntropyLoss().to(device)
-optimizer = torch.optim.SGD(model.parameters(), lr=4.0)
+optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1, gamma=0.9)
 
 train_len = int(len(train_dataset) * 0.95)

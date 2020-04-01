@@ -37,6 +37,10 @@ def train_func(sub_train_):
     for i, (text, category) in enumerate(tqdm(data)):
         optimizer.zero_grad()
         text, category = text.to(device), category.to(device)
+        print(text.device)
+        print(category.device)
+        for param in model.parameters():
+            print(param.is_cuda)
         output = model(text)
         loss = criterion(output, category)
         train_loss += loss.item()

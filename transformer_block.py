@@ -7,8 +7,8 @@ import torch.nn.functional as F
 class TransformerBlock(nn.Module):
     def __init__(self,d_model,num_heads=8,ff_hidden=4):
         super(TransformerBlock,self).__init__()
-        self.attentions = [nn.MultiheadAttention(d_model, num_heads) for _ in range(2)]
-        self.layer_norms = [nn.LayerNorm(d_model) for _ in range(4)]
+        self.attentions = nn.ModuleList([nn.MultiheadAttention(d_model, num_heads) for _ in range(2)])
+        self.layer_norms = nn.ModuleList([nn.LayerNorm(d_model) for _ in range(4)])
         self.feed_forward = nn.Sequential(
             nn.Linear(d_model,ff_hidden*d_model),
             nn.ReLU(),
@@ -26,10 +26,3 @@ class TransformerBlock(nn.Module):
         normed = self.layer_norms[3](forwarded+attended)
         forwarded = self.feed_forward(normed)
         return forwarded+attended
-
-    def to(self, *args, **kwargs):
-        self = super().to(*args, **kwargs) 
-        self.layer_norms = [layer_norm.to(*args, **kwargs) for layer_norm in self.layer_norms]
-        self.attentions = [attention.to(*args,**kwargs) for attention in self.attentions]
-        self.feed_forward = self.feed_forward.to(**args,**kwargs)
-        return self

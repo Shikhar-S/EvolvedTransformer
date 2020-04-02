@@ -18,7 +18,7 @@ def generate_batch(batch,MAX_SEQ_LEN):
     text = torch.cat(text)
     return text, label
 
-def train_func(sub_train_,model,BATCH_SIZE,device,optimizer,criterion,MAX_SEQ_LEN):
+def train_func(sub_train_,model,BATCH_SIZE,device,optimizer,scheduler,criterion,MAX_SEQ_LEN):
     # Train the model
     train_loss = 0
     train_acc = 0
@@ -51,6 +51,7 @@ def test(data_,model,BATCH_SIZE,device,optimizer,criterion,MAX_SEQ_LEN):
             acc += (output.argmax(1) == category).sum().item()
 
     return loss / len(data_), acc / len(data_)
+
 def main(args):
     #Initialise config vars
     NGRAMS=args.ngrams
@@ -91,7 +92,7 @@ def main(args):
     sub_train_, sub_valid_ = random_split(train_dataset, [train_len, len(train_dataset) - train_len])
 
     for epoch in range(N_EPOCHS):
-        train_loss, train_acc = train_func(sub_train_,model,BATCH_SIZE,device,optimizer,criterion,MAX_SEQ_LEN)
+        train_loss, train_acc = train_func(sub_train_,model,BATCH_SIZE,device,optimizer,scheduler,criterion,MAX_SEQ_LEN)
         logger.info('Trained for epoch %s',str(epoch))
         valid_loss, valid_acc = test(sub_valid_,model,BATCH_SIZE,device,optimizer,criterion,MAX_SEQ_LEN)
         

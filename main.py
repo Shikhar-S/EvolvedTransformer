@@ -65,6 +65,7 @@ def main(args):
     N_EPOCHS=args.epochs
     MAX_SEQ_LEN=args.max_seq_len
     TRAIN_SPLIT=args.train_split
+    EVOLVED = args.evolved
     #logging config vars
     logger.info('Device:%s|Batch size:%s|EmbedDim:%s|Epochs:%s|Ngrams:%s|MAX_LEN:%s|Split:%s',device.type,BATCH_SIZE,EMBED_DIM,N_EPOCHS,NGRAMS,MAX_SEQ_LEN,TRAIN_SPLIT)
     
@@ -78,7 +79,7 @@ def main(args):
 
     VOCAB_SIZE = len(train_dataset.get_vocab())
     NUM_CLASS = len(train_dataset.get_labels())
-    model = ClassificationTransformer(EMBED_DIM,VOCAB_SIZE,NUM_CLASS,max_seq_len=MAX_SEQ_LEN)
+    model = ClassificationTransformer(EMBED_DIM,VOCAB_SIZE,NUM_CLASS,max_seq_len=MAX_SEQ_LEN,evolved=EVOLVED)
     model.to(device)
 
     from torch.utils.data.dataset import random_split

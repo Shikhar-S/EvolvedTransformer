@@ -1,4 +1,3 @@
-import pandas as pd
 from torchtext import data
 import torch
 import torch.nn.functional as F

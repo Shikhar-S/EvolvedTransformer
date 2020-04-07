@@ -2,3 +2,4 @@ numpy==1.17.2
 torch==1.2.0
 torchtext==0.5.0
 tqdm==4.44.1
+spacy==2.2.4

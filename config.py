@@ -4,7 +4,7 @@ import utils
 logger = utils.get_logger()
 
 def str2bool(v):
-    return v.loner() in ('true')
+    return v.lower() in ('true')
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--batch",type=int,default=16)

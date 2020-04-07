@@ -6,23 +6,22 @@ import torch
 from tqdm import tqdm
 import config
 import utils
+from data_reader import DataReader
 
 logger=utils.get_logger()
 
-import torch.nn.functional as F
-
-def generate_batch(batch,MAX_SEQ_LEN):
-    label = torch.tensor([entry[0] for entry in batch])
-    text=[F.pad(entry[1], (0,MAX_SEQ_LEN-entry[1].shape[0]), mode='constant', value=0) for entry in batch]
-    text=[torch.unsqueeze(entry,0) for entry in text]
+def generate_batch(batch,MAX_SEQ_LEN,data_reader):
+    label = torch.tensor([data_reader.get_label_id(entry.Label) for entry in batch])
+    text = [data_reader.get_token_tensor(entry.Text,MAX_SEQ_LEN) for entry in batch]
+    text = [torch.unsqueeze(entry,0) for entry in text]
     text = torch.cat(text)
     return text, label
 
-def train_func(sub_train_,model,BATCH_SIZE,device,optimizer,scheduler,criterion,MAX_SEQ_LEN):
+def train_func(sub_train_,data_reader,model,BATCH_SIZE,device,optimizer,scheduler,criterion,MAX_SEQ_LEN):
     # Train the model
     train_loss = 0
     train_acc = 0
-    data = DataLoader(sub_train_, batch_size=BATCH_SIZE, shuffle=True,collate_fn=lambda b: generate_batch(b,MAX_SEQ_LEN))
+    data = DataLoader(sub_train_, batch_size=BATCH_SIZE, shuffle=True,collate_fn=lambda b: generate_batch(b,MAX_SEQ_LEN,data_reader))
     for i, (text, category) in enumerate(tqdm(data)):
         optimizer.zero_grad()
         text, category = text.to(device), category.to(device)
@@ -38,10 +37,10 @@ def train_func(sub_train_,model,BATCH_SIZE,device,optimizer,scheduler,criterion,
 
     return train_loss / len(sub_train_), train_acc / len(sub_train_)
 
-def test(data_,model,BATCH_SIZE,device,optimizer,criterion,MAX_SEQ_LEN):
+def test(data_,data_reader,model,BATCH_SIZE,device,optimizer,criterion,MAX_SEQ_LEN):
     loss = 0
     acc = 0
-    data = DataLoader(data_, batch_size=BATCH_SIZE, collate_fn=lambda b: generate_batch(b,MAX_SEQ_LEN))
+    data = DataLoader(data_, batch_size=BATCH_SIZE, collate_fn=lambda b: generate_batch(b,MAX_SEQ_LEN,data_reader))
     for text, category in tqdm(data):
         text, category = text.to(device), category.to(device)
         with torch.no_grad():
@@ -72,13 +71,17 @@ def main(args):
     import os
     #download data
     logger.info('Loading Data')
-    if not os.path.isdir('./.data'):
-        os.mkdir('./.data')
-    train_dataset, test_dataset = text_classification.DATASETS['AG_NEWS'](root='./.data', ngrams=NGRAMS, vocab=None)
+    # train_dataset,test_dataset,x_vocab,y_vocab=read_data('./.data/ag_news_csv',ngrams=NGRAMS)
+    data_reader = DataReader('./.data/ag_news_csv')
+    #train_dataset, test_dataset = text_classification.DATASETS['AG_NEWS'](root='./.data', ngrams=NGRAMS, vocab=None)
     logger.info('Data Loaded')
+    
+    VOCAB_SIZE = data_reader.get_vocab_size()
+    NUM_CLASS = data_reader.get_num_classes()
 
-    VOCAB_SIZE = len(train_dataset.get_vocab())
-    NUM_CLASS = len(train_dataset.get_labels())
+    train_dataset = data_reader.get_training_data()
+    test_dataset = data_reader.get_testing_data()
+
     model = ClassificationTransformer(EMBED_DIM,VOCAB_SIZE,NUM_CLASS,max_seq_len=MAX_SEQ_LEN,evolved=EVOLVED)
     model.to(device)
 
@@ -93,9 +96,9 @@ def main(args):
     sub_train_, sub_valid_ = random_split(train_dataset, [train_len, len(train_dataset) - train_len])
 
     for epoch in range(N_EPOCHS):
-        train_loss, train_acc = train_func(sub_train_,model,BATCH_SIZE,device,optimizer,scheduler,criterion,MAX_SEQ_LEN)
+        train_loss, train_acc = train_func(sub_train_,data_reader,model,BATCH_SIZE,device,optimizer,scheduler,criterion,MAX_SEQ_LEN)
         logger.info('Trained for epoch %s',str(epoch))
-        valid_loss, valid_acc = test(sub_valid_,model,BATCH_SIZE,device,optimizer,criterion,MAX_SEQ_LEN)
+        valid_loss, valid_acc = test(sub_valid_,data_reader,model,BATCH_SIZE,device,optimizer,criterion,MAX_SEQ_LEN)
         
         TrainingLossStr=f'\tLoss: {train_loss:.4f}(train)\t|\tAcc: {train_acc * 100:.1f}%(train)'
         ValidationLossStr=f'\tLoss: {valid_loss:.4f}(valid)\t|\tAcc: {valid_acc * 100:.1f}%(valid)'

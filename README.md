@@ -6,7 +6,7 @@ Pytorch implementations of:
 * Evolved Transformer Encoder block from [Evolved Transformer](https://arxiv.org/abs/1901.11117).
 * Gated Linear Unit from [Language Modelling with Gated Convolutional Networks](https://arxiv.org/abs/1612.08083).
 
-<p align="center"><img src="/assets/Evolved\ Transformer.png" alt="TransformerModels" width="60%"></p>
+<p align="center"><img src="/assets/EvolvedTransformer.png" alt="TransformerModels" width="60%"></p>
 
 ## Prerequisites
 - numpy==1.17.2

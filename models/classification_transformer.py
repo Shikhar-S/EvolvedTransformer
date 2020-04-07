@@ -1,10 +1,10 @@
-from transformer_block import TransformerBlock
-from evolved_transformer_block import EvolvedTransformerBlock
+from models.transformer_block import TransformerBlock
+from models.evolved_transformer_block import EvolvedTransformerBlock
 import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from embedder import Embedder
+from models.embedder import Embedder
 
 class ClassificationTransformer(nn.Module):
     def __init__(self,d_model,vocab_size,num_classes,num_heads=8,max_seq_len =200,dropout=0.1,max_pool=True,evolved=False):

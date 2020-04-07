@@ -1,6 +1,6 @@
 import torchtext
 from torchtext.datasets import text_classification
-from classification_transformer import ClassificationTransformer
+from models.classification_transformer import ClassificationTransformer
 from torch.utils.data import DataLoader
 import torch
 from tqdm import tqdm

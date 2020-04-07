@@ -1,9 +1,9 @@
-from embedder import Embedder, PositionalEncoder
+from models.embedder import Embedder, PositionalEncoder
 import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from gated_linear_unit import GLU
+from models.gated_linear_unit import GLU
 
 class EvolvedTransformerBlock(nn.Module):
     def __init__(self,d_model,num_heads=8,ff_hidden=4):

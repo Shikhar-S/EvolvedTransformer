@@ -23,6 +23,8 @@ for text classification on AG_NEWS dataset.
 Install prerequisites with:
     
     pip3 install -r requirements.txt
+    
+    python3 -m spacy download en
 
 To run **Encoder** for text classification on AG_NEWS dataset:
 

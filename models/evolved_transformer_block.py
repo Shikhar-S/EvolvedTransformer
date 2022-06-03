@@ -25,7 +25,7 @@ class EvolvedTransformerBlock(nn.Module):
         )
 
         self.mid_layer_norm = nn.LayerNorm(d_model*ff_hidden)
-        self.sep_conv = SeparableConv1D(d_model*ff_hidden, d_model, 9)
+        self.sep_conv = SeparableConv1D(d_model*ff_hidden, d_model//2, 9)
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
@@ -44,7 +44,12 @@ class EvolvedTransformerBlock(nn.Module):
         mid_result = left_branch+right_branch
         mid_result = self.mid_layer_norm(mid_result)
         mid_result = self.sep_conv(mid_result.transpose(1, 2)).transpose(1, 2)
-
+        mid_result = F.pad(
+            input=mid_result,
+            pad=(0, glued.shape[2] - mid_result.shape[2], 0, 0, 0, 0),
+            mode='constant',
+            value=0
+        )
         mid_result = mid_result + glued
 
         normed = self.layer_norms[2](mid_result)
